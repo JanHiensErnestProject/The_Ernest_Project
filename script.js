@@ -36,23 +36,6 @@ function getAverageColor(avg) {
   return "#34c759";
 }
 
-/* ===================== COLOR SHADE ===================== */
-
-function shadeColor(color, percent) {
-  let R = parseInt(color.substring(1,3),16);
-  let G = parseInt(color.substring(3,5),16);
-  let B = parseInt(color.substring(5,7),16);
-
-  R = Math.min(255, Math.max(0, parseInt(R * (100 + percent) / 100)));
-  G = Math.min(255, Math.max(0, parseInt(G * (100 + percent) / 100)));
-  B = Math.min(255, Math.max(0, parseInt(B * (100 + percent) / 100)));
-
-  return "#" +
-    R.toString(16).padStart(2, '0') +
-    G.toString(16).padStart(2, '0') +
-    B.toString(16).padStart(2, '0');
-}
-
 /* ===================== RENDER CHART ===================== */
 
 function renderChart() {
@@ -80,51 +63,18 @@ function renderChart() {
       labels: subjects.map(s => s.name),
       datasets: [{
         data: subjects.map(s => s.score),
-        borderColor: "rgba(220,220,220,0.4)",
-        borderWidth: 2,
-        hoverOffset: 8,
-        backgroundColor: function(context) {
-
-          if (currentChartType !== "doughnut") {
-            return baseColors[context.dataIndex % baseColors.length];
-          }
-
-          const chart = context.chart;
-          const meta = chart.getDatasetMeta(0);
-          const arc = meta.data[context.dataIndex];
-
-          if (!arc) {
-            return baseColors[context.dataIndex % baseColors.length];
-          }
-
-          const { x, y, innerRadius, outerRadius } = arc;
-          const base = baseColors[context.dataIndex % baseColors.length];
-
-          const gradient = ctx.createRadialGradient(
-            x, y, innerRadius,
-            x, y, outerRadius
-          );
-
-          gradient.addColorStop(0, shadeColor(base, -25));
-          gradient.addColorStop(0.6, base);
-          gradient.addColorStop(1, shadeColor(base, 35));
-
-          return gradient;
-        }
+        backgroundColor: baseColors,
+        borderColor: "white",
+        borderWidth: 2
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       cutout: currentChartType === "doughnut" ? "65%" : 0,
-      animation: {
-        animateRotate: true,
-        duration: 1200,
-        easing: "easeOutExpo"
-      },
       plugins: {
         legend: {
-          display: currentChartType === "doughnut"
+          display: true
         }
       },
       scales: currentChartType === "bar" ? {
@@ -137,7 +87,7 @@ function renderChart() {
   });
 }
 
-/* ===================== RENDER SUBJECT LIST ===================== */
+/* ===================== RENDER SUBJECTS ===================== */
 
 function render() {
 
@@ -146,15 +96,13 @@ function render() {
 
   container.innerHTML = "";
 
-  subjects.sort((a, b) => b.score - a.score);
-
   subjects.forEach((subject, index) => {
 
     const card = document.createElement("div");
     card.className = "subject-card";
 
     card.innerHTML = `
-      <div class="subject-info">
+      <div>
         <h3>${subject.name}</h3>
         <p>${subject.score}%</p>
       </div>
