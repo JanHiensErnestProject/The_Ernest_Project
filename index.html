@@ -1,2 +1,30 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<div id="appRoot"></div><script src="script.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ernest Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Ernest's Dashboard</h1>
+      <button onclick="addSubject()">+ Add Subject</button>
+    </header>
+
+    <div class="average-section">
+      <div class="average-label">Average</div>
+      <div class="average-bar">
+        <div class="average-fill" id="averageFill"></div>
+      </div>
+      <div class="average-value" id="averageValue">0%</div>
+    </div>
+
+    <div id="subjectsContainer"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
