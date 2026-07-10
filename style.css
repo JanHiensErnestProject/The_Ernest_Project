@@ -42,6 +42,15 @@ button:hover {
   background: #005bb5;
 }
 
+.cancel-btn {
+  background: #e5e5ea;
+  color: #1d1d1f;
+}
+
+.cancel-btn:hover {
+  background: #d1d1d6;
+}
+
 .average-section {
   margin-bottom: 40px;
 }
@@ -96,4 +105,49 @@ button:hover {
 
 .low-score {
   border-left: 4px solid #ff3b30;
+}
+
+/* MODAL */
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.3);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  width: 300px;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content h2 {
+  margin-bottom: 20px;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  border: 1px solid #d1d1d6;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@keyframes fadeIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
