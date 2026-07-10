@@ -23,7 +23,7 @@ function getAverageColor(avg) {
   return "#34c759";
 }
 
-/* ✅ CENTER TEXT PLUGIN (Fixed for Chart.js v4) */
+/* ✅ CENTER TEXT PLUGIN */
 const centerTextPlugin = {
   id: "centerTextPlugin",
   afterDraw(chart) {
@@ -43,12 +43,12 @@ const centerTextPlugin = {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    ctx.font = "bold 30px sans-serif";
+    ctx.font = "bold 32px sans-serif";
     ctx.fillStyle = color;
     ctx.fillText(avg + "%", x, y - 10);
 
     ctx.font = "14px sans-serif";
-    ctx.fillStyle = "#999";
+    ctx.fillStyle = "#aaa";
     ctx.fillText("Average", x, y + 18);
 
     ctx.restore();
@@ -57,8 +57,33 @@ const centerTextPlugin = {
 
 Chart.register(centerTextPlugin);
 
+/* ✅ GRADIENT + GLOW CREATOR */
+function createGradients(ctx, chartArea) {
+  const colors = [
+    ["#0a84ff", "#5ac8fa"],
+    ["#34c759", "#30d158"],
+    ["#ff9500", "#ffcc00"],
+    ["#af52de", "#bf5af2"],
+    ["#ff3b30", "#ff453a"],
+    ["#5ac8fa", "#64d2ff"]
+  ];
+
+  return colors.map(pair => {
+    const gradient = ctx.createLinearGradient(
+      chartArea.left,
+      chartArea.top,
+      chartArea.right,
+      chartArea.bottom
+    );
+    gradient.addColorStop(0, pair[0]);
+    gradient.addColorStop(1, pair[1]);
+    return gradient;
+  });
+}
+
 function renderChart() {
-  const ctx = document.getElementById("gradesChart").getContext("2d");
+  const canvas = document.getElementById("gradesChart");
+  const ctx = canvas.getContext("2d");
 
   const labels = subjects.map(s => s.name);
   const data = subjects.map(s => s.score);
@@ -75,14 +100,6 @@ function renderChart() {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: [
-          "#0a84ff",
-          "#34c759",
-          "#ff9500",
-          "#af52de",
-          "#ff3b30",
-          "#5ac8fa"
-        ],
         borderWidth: 2
       }]
     },
@@ -100,8 +117,29 @@ function renderChart() {
           beginAtZero: true,
           max: 100
         }
-      } : {}
-    }
+      } : {},
+      animation: {
+        duration: 800
+      }
+    },
+    plugins: [{
+      id: "customGradient",
+      beforeDatasetsDraw(chart) {
+        if (chart.config.type !== "doughnut") return;
+
+        const { ctx, chartArea } = chart;
+        if (!chartArea) return;
+
+        const gradients = createGradients(ctx, chartArea);
+        chart.data.datasets[0].backgroundColor = gradients;
+
+        // Glow effect
+        ctx.save();
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = "rgba(10,132,255,0.5)";
+        ctx.restore();
+      }
+    }]
   });
 }
 
