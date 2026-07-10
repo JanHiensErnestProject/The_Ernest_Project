@@ -23,6 +23,40 @@ function getAverageColor(avg) {
   return "#34c759";
 }
 
+/* ✅ CENTER TEXT PLUGIN (Fixed for Chart.js v4) */
+const centerTextPlugin = {
+  id: "centerTextPlugin",
+  afterDraw(chart) {
+    if (chart.config.type !== "doughnut") return;
+
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    if (!meta || !meta.data || !meta.data[0]) return;
+
+    const x = meta.data[0].x;
+    const y = meta.data[0].y;
+
+    const avg = calculateAverage();
+    const color = getAverageColor(avg);
+
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.font = "bold 30px sans-serif";
+    ctx.fillStyle = color;
+    ctx.fillText(avg + "%", x, y - 10);
+
+    ctx.font = "14px sans-serif";
+    ctx.fillStyle = "#999";
+    ctx.fillText("Average", x, y + 18);
+
+    ctx.restore();
+  }
+};
+
+Chart.register(centerTextPlugin);
+
 function renderChart() {
   const ctx = document.getElementById("gradesChart").getContext("2d");
 
@@ -49,14 +83,13 @@ function renderChart() {
           "#ff3b30",
           "#5ac8fa"
         ],
-        borderWidth: 2,
-        borderColor: "#1c1c1e"
+        borderWidth: 2
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: chartType === "doughnut" ? "60%" : 0,
+      cutout: chartType === "doughnut" ? "65%" : 0,
       plugins: {
         legend: {
           display: chartType === "doughnut"
