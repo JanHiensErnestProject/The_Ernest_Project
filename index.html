@@ -1,101 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Ernest's Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ernest Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- ✅ Chart.js must load BEFORE script.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+body {
+  margin: 0;
+  background: #ffffff;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f5f7;
-      margin: 0;
-      padding: 20px;
-    }
+#chartWrapper {
+  position: relative;
+  width: 500px;
+  height: 500px;
+}
 
-    h1 {
-      margin-bottom: 20px;
-    }
+/* Tubular depth */
+#chartWrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(0,0,0,0.45) 0%,
+    rgba(255,255,255,0.55) 45%,
+    rgba(0,0,0,0.45) 90%
+  );
+  mix-blend-mode: overlay;
+}
 
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-    }
+/* Gloss highlight */
+#chartWrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(255,255,255,0.8),
+    transparent 70%
+  );
+}
 
-    #chartContainer {
-      position: relative;
-      height: 350px;
-    }
-
-    canvas {
-      width: 100% !important;
-      height: 100% !important;
-    }
-
-    .subject-card {
-      padding: 12px;
-      margin-top: 10px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.04);
-    }
-
-    .average-bar {
-      height: 12px;
-      background: #ddd;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-
-    #averageFill {
-      height: 100%;
-      width: 0%;
-      background: #34c759;
-    }
-
-    button {
-      padding: 8px 14px;
-      border: none;
-      border-radius: 8px;
-      background: #0a84ff;
-      color: white;
-      cursor: pointer;
-    }
-  </style>
+canvas {
+  position: relative;
+  z-index: 2;
+}
+</style>
 </head>
 
 <body>
 
-  <h1>Ernest's Dashboard</h1>
+<div id="chartWrapper">
+  <canvas id="gradesChart"></canvas>
+</div>
 
-  <div class="card">
-    <h2>Performance Overview</h2>
-    <div id="chartContainer">
-      <canvas id="gradesChart"></canvas>
-    </div>
-    <br>
-    <button onclick="toggleChartType()">Switch Chart</button>
-  </div>
-
-  <div class="card">
-    <h3>Average</h3>
-    <div class="average-bar">
-      <div id="averageFill"></div>
-    </div>
-    <p id="averageValue">0%</p>
-  </div>
-
-  <div id="subjectsContainer"></div>
-
-  <!-- ✅ Your script loads AFTER Chart.js -->
-  <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
