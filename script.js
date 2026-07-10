@@ -1,4 +1,3 @@
-
 // ==========================
 // DATA
 // ==========================
@@ -135,7 +134,6 @@ function deleteSubject(index) {
 
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
-
   const isDark = document.body.classList.contains("dark");
   localStorage.setItem("darkMode", isDark);
 }
