@@ -5,8 +5,8 @@
   <title>Ernest's Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Chart.js MUST load before script.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- ✅ Chart.js must load BEFORE script.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
     body {
@@ -33,28 +33,17 @@
       height: 350px;
     }
 
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
     .subject-card {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px;
+      padding: 12px;
       margin-top: 10px;
       background: white;
       border-radius: 12px;
       box-shadow: 0 3px 10px rgba(0,0,0,0.04);
-    }
-
-    button {
-      padding: 8px 14px;
-      border: none;
-      border-radius: 8px;
-      background: #0a84ff;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      opacity: 0.85;
     }
 
     .average-bar {
@@ -70,6 +59,15 @@
       width: 0%;
       background: #34c759;
     }
+
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #0a84ff;
+      color: white;
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -82,6 +80,7 @@
     <div id="chartContainer">
       <canvas id="gradesChart"></canvas>
     </div>
+    <br>
     <button onclick="toggleChartType()">Switch Chart</button>
   </div>
 
@@ -95,7 +94,7 @@
 
   <div id="subjectsContainer"></div>
 
-  <!-- Your script -->
+  <!-- ✅ Your script loads AFTER Chart.js -->
   <script src="script.js"></script>
 
 </body>
