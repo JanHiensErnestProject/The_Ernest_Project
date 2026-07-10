@@ -5,12 +5,9 @@ let subjects = JSON.parse(localStorage.getItem("subjects")) || [
   { name: "Biology", score: 86 }
 ];
 
+let editIndex = null;
 let chartInstance = null;
 let currentChartType = "doughnut";
-
-/* ===============================
-   SAVE + AVERAGE
-================================ */
 
 function save() {
   localStorage.setItem("subjects", JSON.stringify(subjects));
@@ -21,91 +18,107 @@ function calculateAverage() {
   return subjects.length ? Math.round(total / subjects.length) : 0;
 }
 
-function getAverageColor(avg) {
-  if (avg < 60) return "#ff3b30";
-  if (avg < 75) return "#ff9500";
-  return "#34c759";
-}
-
 /* ===============================
-   CENTER TEXT
+   ADVANCED GRADIENT PLUGIN
 ================================ */
 
-const centerTextPlugin = {
-  id: "centerTextPlugin",
-  afterDraw(chart) {
+const advancedGradientPlugin = {
+  id: "advancedGradientPlugin",
+  beforeDraw(chart) {
     if (chart.config.type !== "doughnut") return;
 
     const { ctx } = chart;
     const meta = chart.getDatasetMeta(0);
     if (!meta?.data?.length) return;
 
-    const x = meta.data[0].x;
-    const y = meta.data[0].y;
+    const baseColors = [
+      "#0a84ff",
+      "#34c759",
+      "#ffcc00",
+      "#af52de",
+      "#ff3b30",
+      "#5ac8fa"
+    ];
 
-    const avg = calculateAverage();
-    const color = getAverageColor(avg);
+    meta.data.forEach((arc, index) => {
 
-    ctx.save();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+      const { x, y, innerRadius, outerRadius, startAngle, endAngle } = arc;
+      const base = baseColors[index % baseColors.length];
 
-    ctx.font = "bold 36px sans-serif";
-    ctx.fillStyle = color;
-    ctx.fillText(avg + "%", x, y - 12);
+      const midAngle = (startAngle + endAngle) / 2;
 
-    ctx.font = "14px sans-serif";
-    ctx.fillStyle = "#888";
-    ctx.fillText("Average", x, y + 18);
+      ctx.save();
 
-    ctx.restore();
+      // Clip to this arc only
+      ctx.beginPath();
+      ctx.arc(x, y, outerRadius, startAngle, endAngle);
+      ctx.arc(x, y, innerRadius, endAngle, startAngle, true);
+      ctx.closePath();
+      ctx.clip();
+
+      /* -----------------------------
+         1️⃣ RADIAL FADE (inner→outer)
+      ----------------------------- */
+
+      const radial = ctx.createRadialGradient(
+        x, y, innerRadius,
+        x, y, outerRadius
+      );
+
+      radial.addColorStop(0, shade(base, -25));
+      radial.addColorStop(1, shade(base, 35));
+
+      ctx.fillStyle = radial;
+      ctx.fillRect(
+        x - outerRadius,
+        y - outerRadius,
+        outerRadius * 2,
+        outerRadius * 2
+      );
+
+      /* -----------------------------
+         2️⃣ ANGULAR FADE (edge→middle)
+      ----------------------------- */
+
+      const conic = ctx.createConicGradient(startAngle, x, y);
+
+      const sliceSize = endAngle - startAngle;
+
+      conic.addColorStop(0, shade(base, -35));
+      conic.addColorStop(0.5, base);
+      conic.addColorStop(1, shade(base, -35));
+
+      ctx.globalCompositeOperation = "multiply";
+      ctx.fillStyle = conic;
+      ctx.fillRect(
+        x - outerRadius,
+        y - outerRadius,
+        outerRadius * 2,
+        outerRadius * 2
+      );
+
+      ctx.restore();
+    });
+
+    // Prevent default dataset drawing
+    chart.data.datasets[0].backgroundColor = "transparent";
   }
 };
 
-Chart.register(centerTextPlugin);
+Chart.register(advancedGradientPlugin);
 
 /* ===============================
-   SAFE GRADIENT FUNCTION
+   COLOR SHADER
 ================================ */
 
-function createRadialFade(ctx, chartArea, baseColor) {
-
-  const centerX = (chartArea.left + chartArea.right) / 2;
-  const centerY = (chartArea.top + chartArea.bottom) / 2;
-
-  const outerRadius = Math.min(
-    chartArea.right - chartArea.left,
-    chartArea.bottom - chartArea.top
-  ) / 2;
-
-  const gradient = ctx.createRadialGradient(
-    centerX, centerY, outerRadius * 0.4,
-    centerX, centerY, outerRadius
-  );
-
-  gradient.addColorStop(0, shadeColor(baseColor, -25));
-  gradient.addColorStop(0.6, baseColor);
-  gradient.addColorStop(1, shadeColor(baseColor, 35));
-
-  return gradient;
-}
-
-/* ===============================
-   COLOR SHADING
-================================ */
-
-function shadeColor(color, percent) {
+function shade(color, percent) {
   let R = parseInt(color.substring(1,3),16);
   let G = parseInt(color.substring(3,5),16);
   let B = parseInt(color.substring(5,7),16);
 
-  R = parseInt(R * (100 + percent) / 100);
-  G = parseInt(G * (100 + percent) / 100);
-  B = parseInt(B * (100 + percent) / 100);
-
-  R = Math.min(255, Math.max(0, R));
-  G = Math.min(255, Math.max(0, G));
-  B = Math.min(255, Math.max(0, B));
+  R = Math.min(255, Math.max(0, parseInt(R * (100 + percent) / 100)));
+  G = Math.min(255, Math.max(0, parseInt(G * (100 + percent) / 100)));
+  B = Math.min(255, Math.max(0, parseInt(B * (100 + percent) / 100)));
 
   return "#" +
     R.toString(16).padStart(2, '0') +
@@ -119,121 +132,44 @@ function shadeColor(color, percent) {
 
 function renderChart() {
 
-  const canvas = document.getElementById("gradesChart");
-  const ctx = canvas.getContext("2d");
-
-  const labels = subjects.map(s => s.name);
-  const data = subjects.map(s => s.score);
+  const ctx = document.getElementById("gradesChart").getContext("2d");
 
   if (chartInstance) chartInstance.destroy();
-
-  const baseColors = [
-    "#0a84ff",
-    "#34c759",
-    "#ffcc00",
-    "#af52de",
-    "#ff3b30",
-    "#5ac8fa"
-  ];
 
   chartInstance = new Chart(ctx, {
     type: currentChartType,
     data: {
-      labels: labels,
+      labels: subjects.map(s => s.name),
       datasets: [{
-        data: data,
+        data: subjects.map(s => s.score),
+        backgroundColor: "transparent",
         borderColor: "#ffffff",
-        borderWidth: 3,
-        hoverOffset: 12,
-        backgroundColor: function(context) {
-
-          if (currentChartType !== "doughnut") {
-            return baseColors;
-          }
-
-          const { chart } = context;
-          const { ctx, chartArea } = chart;
-
-          if (!chartArea) return baseColors[context.dataIndex];
-
-          return createRadialFade(
-            ctx,
-            chartArea,
-            baseColors[context.dataIndex % baseColors.length]
-          );
-        }
+        borderWidth: 3
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       cutout: "65%",
+      rotation: -90,
       animation: {
         animateRotate: true,
-        duration: 1200,
+        duration: 1400,
         easing: "easeOutExpo"
       },
       plugins: {
-        legend: {
-          display: true
-        }
+        legend: { display: true }
       }
     }
   });
 }
 
 /* ===============================
-   TOGGLE
-================================ */
-
-function toggleChartType() {
-  currentChartType =
-    currentChartType === "doughnut" ? "bar" : "doughnut";
-  renderChart();
-}
-
-/* ===============================
-   RENDER PAGE
+   PAGE RENDER
 ================================ */
 
 function render() {
-
-  const container = document.getElementById("subjectsContainer");
-  container.innerHTML = "";
-
-  subjects.sort((a, b) => b.score - a.score);
-
-  subjects.forEach((subject, index) => {
-    const card = document.createElement("div");
-    card.className = "subject-card";
-
-    card.innerHTML = `
-      <div class="subject-info">
-        <h3>${subject.name}</h3>
-        <p>${subject.score}%</p>
-      </div>
-      <div>
-        <button onclick="deleteSubject(${index})">Delete</button>
-      </div>
-    `;
-
-    container.appendChild(card);
-  });
-
-  const avg = calculateAverage();
-  const avgColor = getAverageColor(avg);
-
-  document.getElementById("averageFill").style.width = avg + "%";
-  document.getElementById("averageFill").style.background = avgColor;
-  document.getElementById("averageValue").innerText = avg + "%";
-
   renderChart();
-}
-
-function deleteSubject(index) {
-  subjects.splice(index, 1);
-  save();
-  render();
 }
 
 render();
