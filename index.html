@@ -3,46 +3,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ernest Dashboard</title>
+<title>Ernest's Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <style>
 body {
   margin: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: white;
   font-family: Arial, sans-serif;
+  background: #f4f6f9;
+  padding: 40px;
 }
+
+h1 {
+  margin-bottom: 30px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+}
+
+#chartWrapper {
+  width: 500px;
+  height: 500px;
+  margin: auto;
+  position: relative;
+}
+
 canvas {
-  width: 500px !important;
-  height: 500px !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 </style>
 </head>
+
 <body>
 
-<canvas id="gradesChart"></canvas>
+<h1>Ernest's Dashboard</h1>
+
+<div class="card">
+  <h2>Performance Overview</h2>
+  <div id="chartWrapper">
+    <canvas id="gradesChart"></canvas>
+  </div>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-  const ctx = document.getElementById("gradesChart");
+  const subjects = [
+    { name: "Mathematics", score: 85 },
+    { name: "English", score: 78 },
+    { name: "Science", score: 90 },
+    { name: "Math", score: 70 },
+    { name: "Biology", score: 86 },
+    { name: "History", score: 88 }
+  ];
+
+  const ctx = document.getElementById("gradesChart").getContext("2d");
 
   new Chart(ctx, {
     type: "doughnut",
     data: {
-      labels: ["Math", "English", "Science", "History"],
+      labels: subjects.map(s => s.name),
       datasets: [{
-        data: [85, 78, 90, 88],
-        backgroundColor: ["#ff6384", "#36a2eb", "#ffce56", "#4bc0c0"]
+        data: subjects.map(s => s.score),
+        borderWidth: 3,
+        borderColor: "#ffffff",
+        backgroundColor: [
+          "#003caa",
+          "#006b2e",
+          "#b34700",
+          "#5600aa",
+          "#99001f",
+          "#006a8f"
+        ]
       }]
     },
     options: {
-      cutout: "60%"
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "60%",
+      plugins: {
+        legend: {
+          position: "top"
+        }
+      }
     }
   });
 
