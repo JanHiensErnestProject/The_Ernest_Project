@@ -5,9 +5,12 @@ let subjects = JSON.parse(localStorage.getItem("subjects")) || [
   { name: "Biology", score: 86 }
 ];
 
-let editIndex = null;
 let chartInstance = null;
-let currentChartType = "bar";
+let currentChartType = "doughnut";
+
+/* ===============================
+   SAVE + AVERAGE
+================================ */
 
 function save() {
   localStorage.setItem("subjects", JSON.stringify(subjects));
@@ -24,7 +27,10 @@ function getAverageColor(avg) {
   return "#34c759";
 }
 
-/* ✅ CENTER TEXT PLUGIN */
+/* ===============================
+   CENTER TEXT
+================================ */
+
 const centerTextPlugin = {
   id: "centerTextPlugin",
   afterDraw(chart) {
@@ -44,12 +50,12 @@ const centerTextPlugin = {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    ctx.font = "bold 34px sans-serif";
+    ctx.font = "bold 36px sans-serif";
     ctx.fillStyle = color;
     ctx.fillText(avg + "%", x, y - 12);
 
     ctx.font = "14px sans-serif";
-    ctx.fillStyle = "#999";
+    ctx.fillStyle = "#888";
     ctx.fillText("Average", x, y + 18);
 
     ctx.restore();
@@ -58,7 +64,36 @@ const centerTextPlugin = {
 
 Chart.register(centerTextPlugin);
 
-/* ✅ SHADE HELPER FOR DARK/LIGHT FADE */
+/* ===============================
+   SAFE GRADIENT FUNCTION
+================================ */
+
+function createRadialFade(ctx, chartArea, baseColor) {
+
+  const centerX = (chartArea.left + chartArea.right) / 2;
+  const centerY = (chartArea.top + chartArea.bottom) / 2;
+
+  const outerRadius = Math.min(
+    chartArea.right - chartArea.left,
+    chartArea.bottom - chartArea.top
+  ) / 2;
+
+  const gradient = ctx.createRadialGradient(
+    centerX, centerY, outerRadius * 0.4,
+    centerX, centerY, outerRadius
+  );
+
+  gradient.addColorStop(0, shadeColor(baseColor, -25));
+  gradient.addColorStop(0.6, baseColor);
+  gradient.addColorStop(1, shadeColor(baseColor, 35));
+
+  return gradient;
+}
+
+/* ===============================
+   COLOR SHADING
+================================ */
+
 function shadeColor(color, percent) {
   let R = parseInt(color.substring(1,3),16);
   let G = parseInt(color.substring(3,5),16);
@@ -68,30 +103,29 @@ function shadeColor(color, percent) {
   G = parseInt(G * (100 + percent) / 100);
   B = parseInt(B * (100 + percent) / 100);
 
-  R = (R<255)?R:255;
-  G = (G<255)?G:255;
-  B = (B<255)?B:255;
+  R = Math.min(255, Math.max(0, R));
+  G = Math.min(255, Math.max(0, G));
+  B = Math.min(255, Math.max(0, B));
 
-  const RR = ((R.toString(16).length==1)?"0":"")+R.toString(16);
-  const GG = ((G.toString(16).length==1)?"0":"")+G.toString(16);
-  const BB = ((B.toString(16).length==1)?"0":"")+B.toString(16);
-
-  return "#"+RR+GG+BB;
+  return "#" +
+    R.toString(16).padStart(2, '0') +
+    G.toString(16).padStart(2, '0') +
+    B.toString(16).padStart(2, '0');
 }
 
-/* ✅ RENDER CHART WITH TRUE RADIAL FADING */
+/* ===============================
+   RENDER CHART
+================================ */
+
 function renderChart() {
+
   const canvas = document.getElementById("gradesChart");
   const ctx = canvas.getContext("2d");
 
   const labels = subjects.map(s => s.name);
   const data = subjects.map(s => s.score);
 
-  if (chartInstance) {
-    chartInstance.destroy();
-  }
-
-  const chartType = currentChartType === "bar" ? "bar" : "doughnut";
+  if (chartInstance) chartInstance.destroy();
 
   const baseColors = [
     "#0a84ff",
@@ -103,7 +137,7 @@ function renderChart() {
   ];
 
   chartInstance = new Chart(ctx, {
-    type: chartType,
+    type: currentChartType,
     data: {
       labels: labels,
       datasets: [{
@@ -113,68 +147,57 @@ function renderChart() {
         hoverOffset: 12,
         backgroundColor: function(context) {
 
-          if (chartType !== "doughnut") {
+          if (currentChartType !== "doughnut") {
             return baseColors;
           }
 
-          const chart = context.chart;
-          const arc = chart.getDatasetMeta(0).data[context.dataIndex];
-          if (!arc) return baseColors[context.dataIndex];
+          const { chart } = context;
+          const { ctx, chartArea } = chart;
 
-          const { x, y, innerRadius, outerRadius } = arc;
-          const base = baseColors[context.dataIndex % baseColors.length];
+          if (!chartArea) return baseColors[context.dataIndex];
 
-          const gradient = chart.ctx.createRadialGradient(
-            x, y, innerRadius,
-            x, y, outerRadius
+          return createRadialFade(
+            ctx,
+            chartArea,
+            baseColors[context.dataIndex % baseColors.length]
           );
-
-          // Darker inside
-          gradient.addColorStop(0, shadeColor(base, -25));
-
-          // Normal middle
-          gradient.addColorStop(0.5, base);
-
-          // Lighter outside
-          gradient.addColorStop(1, shadeColor(base, 35));
-
-          return gradient;
         }
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: chartType === "doughnut" ? "65%" : 0,
-      rotation: -90,
+      cutout: "65%",
       animation: {
         animateRotate: true,
-        duration: 1400,
+        duration: 1200,
         easing: "easeOutExpo"
       },
       plugins: {
         legend: {
-          display: chartType === "doughnut"
+          display: true
         }
-      },
-      scales: chartType === "bar" ? {
-        y: {
-          beginAtZero: true,
-          max: 100
-        }
-      } : {}
+      }
     }
   });
 }
 
-/* ✅ TOGGLE CHART TYPE */
+/* ===============================
+   TOGGLE
+================================ */
+
 function toggleChartType() {
-  currentChartType = currentChartType === "bar" ? "doughnut" : "bar";
+  currentChartType =
+    currentChartType === "doughnut" ? "bar" : "doughnut";
   renderChart();
 }
 
-/* ✅ RENDER SUBJECT LIST */
+/* ===============================
+   RENDER PAGE
+================================ */
+
 function render() {
+
   const container = document.getElementById("subjectsContainer");
   container.innerHTML = "";
 
@@ -190,7 +213,6 @@ function render() {
         <p>${subject.score}%</p>
       </div>
       <div>
-        <button onclick="openModal(${index})">Edit</button>
         <button onclick="deleteSubject(${index})">Delete</button>
       </div>
     `;
@@ -208,58 +230,10 @@ function render() {
   renderChart();
 }
 
-/* ✅ MODAL CONTROLS */
-function openModal(index = null) {
-  editIndex = index;
-  document.getElementById("modal").style.display = "flex";
-
-  if (index !== null) {
-    document.getElementById("subjectName").value = subjects[index].name;
-    document.getElementById("subjectScore").value = subjects[index].score;
-  } else {
-    document.getElementById("subjectName").value = "";
-    document.getElementById("subjectScore").value = "";
-  }
-}
-
-function closeModal() {
-  document.getElementById("modal").style.display = "none";
-}
-
-function saveSubject() {
-  const name = document.getElementById("subjectName").value.trim();
-  const score = parseInt(document.getElementById("subjectScore").value);
-
-  if (!name || isNaN(score) || score < 0 || score > 100) return;
-
-  if (editIndex !== null) {
-    subjects[editIndex] = { name, score };
-  } else {
-    subjects.push({ name, score });
-  }
-
-  save();
-  render();
-  closeModal();
-}
-
 function deleteSubject(index) {
   subjects.splice(index, 1);
   save();
   render();
 }
 
-/* ✅ DARK MODE */
-function toggleDarkMode() {
-  document.body.classList.toggle("dark");
-  localStorage.setItem("darkMode", document.body.classList.contains("dark"));
-}
-
-function loadDarkMode() {
-  if (localStorage.getItem("darkMode") === "true") {
-    document.body.classList.add("dark");
-  }
-}
-
-loadDarkMode();
 render();
