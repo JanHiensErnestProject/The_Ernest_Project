@@ -11,7 +11,7 @@
   <div class="container">
     <header>
       <h1>Ernest's Dashboard</h1>
-      <button onclick="addSubject()">+ Add Subject</button>
+      <button onclick="openModal()">+ Add Subject</button>
     </header>
 
     <div class="average-section">
@@ -23,6 +23,21 @@
     </div>
 
     <div id="subjectsContainer"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Add Subject</h2>
+
+      <input type="text" id="subjectName" placeholder="Subject name">
+      <input type="number" id="subjectScore" placeholder="Score">
+
+      <div class="modal-buttons">
+        <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+        <button onclick="saveSubject()">Save</button>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>
