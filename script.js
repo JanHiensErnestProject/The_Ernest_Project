@@ -6,171 +6,117 @@ let subjects = JSON.parse(localStorage.getItem("subjects")) || [
 ];
 
 let chartInstance = null;
+let currentChartType = "doughnut";
 
-/* ===============================
-   CALCULATE TOTAL
-================================ */
+/* =========================
+   SAVE
+========================= */
 
-function calculateTotal() {
-  return subjects.reduce((sum, s) => sum + s.score, 0);
+function save() {
+  localStorage.setItem("subjects", JSON.stringify(subjects));
 }
 
-/* ===============================
-   CUSTOM RING PLUGIN
-================================ */
+/* =========================
+   COLOR SHADING
+========================= */
 
-const ringPlugin = {
-  id: "ringPlugin",
-  beforeDraw(chart) {
+function shadeColor(color, percent) {
+  let R = parseInt(color.substring(1,3),16);
+  let G = parseInt(color.substring(3,5),16);
+  let B = parseInt(color.substring(5,7),16);
 
-    if (chart.config.type !== "doughnut") return;
+  R = Math.min(255, Math.max(0, parseInt(R * (100 + percent) / 100)));
+  G = Math.min(255, Math.max(0, parseInt(G * (100 + percent) / 100)));
+  B = Math.min(255, Math.max(0, parseInt(B * (100 + percent) / 100)));
 
-    const { ctx } = chart;
-    const meta = chart.getDatasetMeta(0);
-    if (!meta?.data?.length) return;
+  return "#" +
+    R.toString(16).padStart(2, '0') +
+    G.toString(16).padStart(2, '0') +
+    B.toString(16).padStart(2, '0');
+}
 
-    const x = meta.data[0].x;
-    const y = meta.data[0].y;
-    const innerRadius = meta.data[0].innerRadius;
-    const outerRadius = meta.data[0].outerRadius;
-
-    const total = calculateTotal();
-
-    ctx.save();
-
-    /* ==========================
-       1️⃣ CONTINUOUS ANGULAR GRADIENT
-    =========================== */
-
-    const conic = ctx.createConicGradient(-Math.PI / 2, x, y);
-
-    conic.addColorStop(0.0, "#b00020");
-    conic.addColorStop(0.25, "#ff6f00");
-    conic.addColorStop(0.5, "#ffd54f");
-    conic.addColorStop(0.75, "#8bc34a");
-    conic.addColorStop(1.0, "#1b5e20");
-
-    ctx.beginPath();
-    ctx.arc(x, y, outerRadius, 0, Math.PI * 2);
-    ctx.arc(x, y, innerRadius, Math.PI * 2, 0, true);
-    ctx.closePath();
-
-    ctx.fillStyle = conic;
-    ctx.fill();
-
-    /* ==========================
-       2️⃣ RADIAL DEPTH OVERLAY
-    =========================== */
-
-    const radial = ctx.createRadialGradient(
-      x, y, innerRadius,
-      x, y, outerRadius
-    );
-
-    radial.addColorStop(0, "rgba(0,0,0,0.35)");
-    radial.addColorStop(0.6, "rgba(0,0,0,0.1)");
-    radial.addColorStop(1, "rgba(255,255,255,0.15)");
-
-    ctx.globalCompositeOperation = "overlay";
-    ctx.fillStyle = radial;
-    ctx.fill();
-
-    ctx.globalCompositeOperation = "source-over";
-
-    /* ==========================
-       3️⃣ SUBJECT SEPARATOR LINES
-    =========================== */
-
-    let currentAngle = -Math.PI / 2;
-
-    subjects.forEach(subject => {
-
-      const sliceAngle = (subject.score / total) * (Math.PI * 2);
-
-      ctx.beginPath();
-      ctx.moveTo(
-        x + innerRadius * Math.cos(currentAngle),
-        y + innerRadius * Math.sin(currentAngle)
-      );
-      ctx.lineTo(
-        x + outerRadius * Math.cos(currentAngle),
-        y + outerRadius * Math.sin(currentAngle)
-      );
-
-      ctx.strokeStyle = "rgba(200,200,200,0.6)";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      currentAngle += sliceAngle;
-    });
-
-    ctx.restore();
-
-    // Disable default dataset drawing
-    chart.data.datasets[0].backgroundColor = "transparent";
-  }
-};
-
-Chart.register(ringPlugin);
-
-/* ===============================
+/* =========================
    RENDER CHART
-================================ */
+========================= */
 
 function renderChart() {
 
-  const ctx = document.getElementById("gradesChart").getContext("2d");
+  const canvas = document.getElementById("gradesChart");
+  const ctx = canvas.getContext("2d");
 
   if (chartInstance) chartInstance.destroy();
+
+  const baseColors = [
+    "#0a84ff",
+    "#34c759",
+    "#ff9500",
+    "#af52de",
+    "#ff3b30",
+    "#5ac8fa",
+    "#ffd60a"
+  ];
 
   chartInstance = new Chart(ctx, {
     type: "doughnut",
     data: {
+      labels: subjects.map(s => s.name),
       datasets: [{
-        data: [100],
-        backgroundColor: "transparent",
-        borderWidth: 0
+        data: subjects.map(s => s.score),
+        borderColor: "rgba(255,255,255,0.4)",
+        borderWidth: 2,
+        hoverOffset: 8,
+        backgroundColor: function(context) {
+
+          const chart = context.chart;
+          const meta = chart.getDatasetMeta(0);
+          const arc = meta.data[context.dataIndex];
+          if (!arc) return baseColors[context.dataIndex];
+
+          const { x, y, innerRadius, outerRadius } = arc;
+          const base = baseColors[context.dataIndex % baseColors.length];
+
+          const gradient = ctx.createRadialGradient(
+            x, y, innerRadius,
+            x, y, outerRadius
+          );
+
+          // darker inner
+          gradient.addColorStop(0, shadeColor(base, -30));
+
+          // original mid
+          gradient.addColorStop(0.6, base);
+
+          // lighter outer
+          gradient.addColorStop(1, shadeColor(base, 35));
+
+          return gradient;
+        }
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: "70%",
-      rotation: -90,
+      cutout: "65%",
+      animation: {
+        animateRotate: true,
+        duration: 1200,
+        easing: "easeOutExpo"
+      },
       plugins: {
-        legend: { display: false }
+        legend: {
+          display: true
+        }
       }
     }
   });
 }
 
-/* ===============================
-   CENTER TEXT
-================================ */
-
-function drawCenterText() {
-  const canvas = document.getElementById("gradesChart");
-  const ctx = canvas.getContext("2d");
-
-  const total = calculateTotal();
-  const avg = Math.round(total / subjects.length);
-
-  ctx.save();
-  ctx.font = "bold 48px sans-serif";
-  ctx.fillStyle = "#1b5e20";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(avg + "%", canvas.width / 2, canvas.height / 2);
-  ctx.restore();
-}
-
-/* ===============================
-   INIT
-================================ */
+/* =========================
+   PAGE RENDER
+========================= */
 
 function render() {
   renderChart();
-  setTimeout(drawCenterText, 100);
 }
 
 render();
