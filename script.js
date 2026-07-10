@@ -23,7 +23,7 @@ function getAverageColor(avg) {
   return "#34c759";
 }
 
-/* ✅ CENTER TEXT PLUGIN */
+/* ✅ CENTER TEXT */
 const centerTextPlugin = {
   id: "centerTextPlugin",
   afterDraw(chart) {
@@ -48,7 +48,7 @@ const centerTextPlugin = {
     ctx.fillText(avg + "%", x, y - 10);
 
     ctx.font = "14px sans-serif";
-    ctx.fillStyle = "#aaa";
+    ctx.fillStyle = "#bbb";
     ctx.fillText("Average", x, y + 18);
 
     ctx.restore();
@@ -57,26 +57,30 @@ const centerTextPlugin = {
 
 Chart.register(centerTextPlugin);
 
-/* ✅ GRADIENT + GLOW CREATOR */
-function createGradients(ctx, chartArea) {
-  const colors = [
-    ["#0a84ff", "#5ac8fa"],
+/* ✅ STRONG GRADIENT CREATOR */
+function createStrongGradients(ctx, chartArea) {
+  const baseColors = [
+    ["#0a84ff", "#64d2ff"],
     ["#34c759", "#30d158"],
-    ["#ff9500", "#ffcc00"],
+    ["#ff9500", "#ffd60a"],
     ["#af52de", "#bf5af2"],
     ["#ff3b30", "#ff453a"],
-    ["#5ac8fa", "#64d2ff"]
+    ["#5ac8fa", "#70e1ff"]
   ];
 
-  return colors.map(pair => {
-    const gradient = ctx.createLinearGradient(
-      chartArea.left,
-      chartArea.top,
-      chartArea.right,
-      chartArea.bottom
+  return baseColors.map(pair => {
+    const gradient = ctx.createRadialGradient(
+      chartArea.width / 2,
+      chartArea.height / 2,
+      20,
+      chartArea.width / 2,
+      chartArea.height / 2,
+      chartArea.width / 2
     );
-    gradient.addColorStop(0, pair[0]);
-    gradient.addColorStop(1, pair[1]);
+
+    gradient.addColorStop(0, pair[1]);  // bright inner
+    gradient.addColorStop(1, pair[0]);  // darker outer
+
     return gradient;
   });
 }
@@ -100,7 +104,8 @@ function renderChart() {
       labels: labels,
       datasets: [{
         data: data,
-        borderWidth: 2
+        borderWidth: 3,
+        borderColor: "#ffffff"
       }]
     },
     options: {
@@ -119,25 +124,28 @@ function renderChart() {
         }
       } : {},
       animation: {
-        duration: 800
+        duration: 900,
+        easing: "easeOutQuart"
       }
     },
     plugins: [{
-      id: "customGradient",
+      id: "gradientPlugin",
       beforeDatasetsDraw(chart) {
         if (chart.config.type !== "doughnut") return;
 
         const { ctx, chartArea } = chart;
         if (!chartArea) return;
 
-        const gradients = createGradients(ctx, chartArea);
+        const gradients = createStrongGradients(ctx, chartArea);
         chart.data.datasets[0].backgroundColor = gradients;
 
-        // Glow effect
+        // REAL GLOW
         ctx.save();
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = "rgba(10,132,255,0.5)";
-        ctx.restore();
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = "rgba(255,255,255,0.3)";
+      },
+      afterDatasetsDraw(chart) {
+        chart.ctx.restore();
       }
     }]
   });
