@@ -1,224 +1,62 @@
-let subjects = JSON.parse(localStorage.getItem("subjects")) || [
-  { name: "Mathematics", score: 72 },
-  { name: "English", score: 65 },
-  { name: "Science", score: 88 }
-];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ernest Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-let editIndex = null;
-let chartInstance = null;
-let currentChartType = "bar";
+  <div class="container">
+    <header>
+      <h1>Ernest's Dashboard</h1>
 
-function save() {
-  localStorage.setItem("subjects", JSON.stringify(subjects));
-}
-
-function calculateAverage() {
-  const total = subjects.reduce((sum, s) => sum + s.score, 0);
-  return subjects.length ? Math.round(total / subjects.length) : 0;
-}
-
-function getAverageColor(avg) {
-  if (avg < 60) return "#ff3b30";
-  if (avg < 75) return "#ff9500";
-  return "#34c759";
-}
-
-/* =========================
-   CENTER TEXT PLUGIN
-========================= */
-
-const centerTextPlugin = {
-  id: "centerText",
-  beforeDraw(chart) {
-    if (chart.config.type !== "doughnut") return;
-
-    const { width, height, ctx } = chart;
-    ctx.save();
-
-    const avg = calculateAverage();
-    const color = getAverageColor(avg);
-
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    ctx.font = "bold 32px sans-serif";
-    ctx.fillStyle = color;
-    ctx.fillText(avg + "%", width / 2, height / 2 - 10);
-
-    ctx.font = "14px sans-serif";
-    ctx.fillStyle = "#999";
-    ctx.fillText("Average", width / 2, height / 2 + 20);
-
-    ctx.restore();
-  }
-};
-
-Chart.register(centerTextPlugin);
-
-/* =========================
-   CHART RENDER
-========================= */
-
-function renderChart() {
-  const ctx = document.getElementById("gradesChart").getContext("2d");
-
-  const labels = subjects.map(s => s.name);
-  const data = subjects.map(s => s.score);
-
-  if (chartInstance) {
-    chartInstance.destroy();
-  }
-
-  const chartType = currentChartType === "bar" ? "bar" : "doughnut";
-
-  chartInstance = new Chart(ctx, {
-    type: chartType,
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: [
-          "#0a84ff",
-          "#34c759",
-          "#ff9500",
-          "#af52de",
-          "#ff3b30",
-          "#5ac8fa"
-        ],
-        borderWidth: 2,
-        borderColor: "#1c1c1e"
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: chartType === "doughnut" ? "65%" : 0,
-      plugins: {
-        legend: {
-          display: chartType === "doughnut"
-        }
-      },
-      scales: chartType === "bar" ? {
-        y: {
-          beginAtZero: true,
-          max: 100
-        }
-      } : {}
-    }
-  });
-}
-
-function toggleChartType() {
-  currentChartType = currentChartType === "bar" ? "doughnut" : "bar";
-  renderChart();
-}
-
-/* =========================
-   RENDER UI
-========================= */
-
-function render() {
-  const container = document.getElementById("subjectsContainer");
-  container.innerHTML = "";
-
-  subjects.sort((a, b) => b.score - a.score);
-
-  subjects.forEach((subject, index) => {
-    const card = document.createElement("div");
-    card.className = "subject-card";
-
-    if (subject.score < 70) {
-      card.classList.add("low-score");
-    }
-
-    card.innerHTML = `
-      <div class="subject-info">
-        <h3>${subject.name}</h3>
-        <p>${subject.score}%</p>
+      <div class="header-buttons">
+        <button class="toggle-btn" onclick="toggleDarkMode()">🌙</button>
+        <button onclick="openModal()">+ Add Subject</button>
       </div>
-      <div>
-        <button onclick="openModal(${index})">Edit</button>
-        <button onclick="deleteSubject(${index})">Delete</button>
+    </header>
+
+    <!-- Chart Section -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h3>Performance Overview</h3>
+        <button onclick="toggleChartType()">Switch Chart</button>
       </div>
-    `;
+      <canvas id="gradesChart"></canvas>
+    </div>
 
-    container.appendChild(card);
-  });
+    <!-- Average Section -->
+    <div class="average-section">
+      <div class="average-label">Average</div>
+      <div class="average-bar">
+        <div class="average-fill" id="averageFill"></div>
+      </div>
+      <div class="average-value" id="averageValue">0%</div>
+    </div>
 
-  const avg = calculateAverage();
-  const avgColor = getAverageColor(avg);
+    <div id="subjectsContainer"></div>
+  </div>
 
-  const fill = document.getElementById("averageFill");
-  fill.style.width = avg + "%";
-  fill.style.background = avgColor;
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Add Subject</h2>
+      <input type="text" id="subjectName" placeholder="Subject name">
+      <input type="number" id="subjectScore" placeholder="Score">
+      <div class="modal-buttons">
+        <button onclick="closeModal()">Cancel</button>
+        <button onclick="saveSubject()">Save</button>
+      </div>
+    </div>
+  </div>
 
-  document.getElementById("averageValue").innerText = avg + "%";
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  renderChart();
-}
+  <!-- Script -->
+  <script src="script.js?v=200"></script>
 
-/* =========================
-   MODAL
-========================= */
-
-function openModal(index = null) {
-  editIndex = index;
-  document.getElementById("modal").style.display = "flex";
-
-  if (index !== null) {
-    document.getElementById("modalTitle").innerText = "Edit Subject";
-    document.getElementById("subjectName").value = subjects[index].name;
-    document.getElementById("subjectScore").value = subjects[index].score;
-  } else {
-    document.getElementById("modalTitle").innerText = "Add Subject";
-    document.getElementById("subjectName").value = "";
-    document.getElementById("subjectScore").value = "";
-  }
-}
-
-function closeModal() {
-  document.getElementById("modal").style.display = "none";
-}
-
-function saveSubject() {
-  const name = document.getElementById("subjectName").value.trim();
-  const score = parseInt(document.getElementById("subjectScore").value);
-
-  if (!name || isNaN(score) || score < 0 || score > 100) return;
-
-  if (editIndex !== null) {
-    subjects[editIndex] = { name, score };
-  } else {
-    subjects.push({ name, score });
-  }
-
-  save();
-  render();
-  closeModal();
-}
-
-function deleteSubject(index) {
-  subjects.splice(index, 1);
-  save();
-  render();
-}
-
-/* =========================
-   DARK MODE
-========================= */
-
-function toggleDarkMode() {
-  document.body.classList.toggle("dark");
-  const isDark = document.body.classList.contains("dark");
-  localStorage.setItem("darkMode", isDark);
-}
-
-function loadDarkMode() {
-  const saved = localStorage.getItem("darkMode");
-  if (saved === "true") {
-    document.body.classList.add("dark");
-  }
-}
-
-loadDarkMode();
-render();
+</body>
+</html>
