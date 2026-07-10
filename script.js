@@ -121,4 +121,22 @@ function loadDarkMode() {
 loadDarkMode();
 }
 
-render();
+render();// 🌙 Dark Mode
+
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+
+  const isDark = document.body.classList.contains("dark");
+  localStorage.setItem("darkMode", isDark);
+}
+
+function loadDarkMode() {
+  const saved = localStorage.getItem("darkMode");
+
+  if (saved === "true") {
+    document.body.classList.add("dark");
+  }
+}
+
+// Load saved theme
+loadDarkMode();
