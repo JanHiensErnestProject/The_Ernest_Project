@@ -1,7 +1,8 @@
 let subjects = JSON.parse(localStorage.getItem("subjects")) || [
-  { name: "Mathematics", score: 72 },
-  { name: "English", score: 65 },
-  { name: "Science", score: 88 }
+  { name: "Math", score: 99 },
+  { name: "History", score: 93 },
+  { name: "Science", score: 88 },
+  { name: "Biology", score: 86 }
 ];
 
 let editIndex = null;
@@ -23,7 +24,7 @@ function getAverageColor(avg) {
   return "#34c759";
 }
 
-/* ✅ CENTER TEXT */
+/* ✅ CENTER TEXT INSIDE DOUGHNUT */
 const centerTextPlugin = {
   id: "centerTextPlugin",
   afterDraw(chart) {
@@ -31,7 +32,7 @@ const centerTextPlugin = {
 
     const { ctx } = chart;
     const meta = chart.getDatasetMeta(0);
-    if (!meta || !meta.data || !meta.data[0]) return;
+    if (!meta?.data?.length) return;
 
     const x = meta.data[0].x;
     const y = meta.data[0].y;
@@ -48,7 +49,7 @@ const centerTextPlugin = {
     ctx.fillText(avg + "%", x, y - 10);
 
     ctx.font = "14px sans-serif";
-    ctx.fillStyle = "#bbb";
+    ctx.fillStyle = "#999";
     ctx.fillText("Average", x, y + 18);
 
     ctx.restore();
@@ -56,6 +57,21 @@ const centerTextPlugin = {
 };
 
 Chart.register(centerTextPlugin);
+
+/* ✅ SMOOTH FADING GRADIENT */
+function createGradient(ctx, color1, color2) {
+  const gradient = ctx.createRadialGradient(
+    200, 200, 40,
+    200, 200, 260
+  );
+
+  gradient.addColorStop(0, color1);
+  gradient.addColorStop(0.5, color1);
+  gradient.addColorStop(0.8, color2);
+  gradient.addColorStop(1, color2);
+
+  return gradient;
+}
 
 function renderChart() {
   const canvas = document.getElementById("gradesChart");
@@ -70,24 +86,19 @@ function renderChart() {
 
   const chartType = currentChartType === "bar" ? "bar" : "doughnut";
 
-  // ✅ CLEAN GRADIENT COLORS
-  const gradientColors = chartType === "doughnut"
-    ? [
-        createGradient(ctx, "#0a84ff", "#64d2ff"),
-        createGradient(ctx, "#34c759", "#30d158"),
-        createGradient(ctx, "#ff9500", "#ffd60a"),
-        createGradient(ctx, "#af52de", "#bf5af2"),
-        createGradient(ctx, "#ff3b30", "#ff453a"),
-        createGradient(ctx, "#5ac8fa", "#70e1ff")
-      ]
-    : [
-        "#0a84ff",
-        "#34c759",
-        "#ff9500",
-        "#af52de",
-        "#ff3b30",
-        "#5ac8fa"
-      ];
+  const baseColors = [
+    ["#0a84ff", "#64d2ff"],
+    ["#34c759", "#30d158"],
+    ["#ff9500", "#ffd60a"],
+    ["#af52de", "#bf5af2"],
+    ["#ff3b30", "#ff453a"],
+    ["#5ac8fa", "#70e1ff"]
+  ];
+
+  const backgroundColors =
+    chartType === "doughnut"
+      ? baseColors.map(pair => createGradient(ctx, pair[0], pair[1]))
+      : baseColors.map(pair => pair[0]);
 
   chartInstance = new Chart(ctx, {
     type: chartType,
@@ -95,15 +106,20 @@ function renderChart() {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: gradientColors,
+        backgroundColor: backgroundColors,
+        borderColor: "#ffffff",
         borderWidth: 3,
-        borderColor: "#ffffff"
+        hoverOffset: 8
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       cutout: chartType === "doughnut" ? "65%" : 0,
+      animation: {
+        duration: 1000,
+        easing: "easeOutQuart"
+      },
       plugins: {
         legend: {
           display: chartType === "doughnut"
@@ -114,19 +130,9 @@ function renderChart() {
           beginAtZero: true,
           max: 100
         }
-      } : {},
-      animation: {
-        duration: 800
-      }
+      } : {}
     }
   });
-}
-
-function createGradient(ctx, color1, color2) {
-  const gradient = ctx.createLinearGradient(0, 0, 300, 300);
-  gradient.addColorStop(0, color1);
-  gradient.addColorStop(1, color2);
-  return gradient;
 }
 
 function toggleChartType() {
@@ -143,10 +149,6 @@ function render() {
   subjects.forEach((subject, index) => {
     const card = document.createElement("div");
     card.className = "subject-card";
-
-    if (subject.score < 70) {
-      card.classList.add("low-score");
-    }
 
     card.innerHTML = `
       <div class="subject-info">
@@ -165,10 +167,8 @@ function render() {
   const avg = calculateAverage();
   const avgColor = getAverageColor(avg);
 
-  const fill = document.getElementById("averageFill");
-  fill.style.width = avg + "%";
-  fill.style.background = avgColor;
-
+  document.getElementById("averageFill").style.width = avg + "%";
+  document.getElementById("averageFill").style.background = avgColor;
   document.getElementById("averageValue").innerText = avg + "%";
 
   renderChart();
@@ -179,11 +179,9 @@ function openModal(index = null) {
   document.getElementById("modal").style.display = "flex";
 
   if (index !== null) {
-    document.getElementById("modalTitle").innerText = "Edit Subject";
     document.getElementById("subjectName").value = subjects[index].name;
     document.getElementById("subjectScore").value = subjects[index].score;
   } else {
-    document.getElementById("modalTitle").innerText = "Add Subject";
     document.getElementById("subjectName").value = "";
     document.getElementById("subjectScore").value = "";
   }
@@ -218,13 +216,11 @@ function deleteSubject(index) {
 
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
-  const isDark = document.body.classList.contains("dark");
-  localStorage.setItem("darkMode", isDark);
+  localStorage.setItem("darkMode", document.body.classList.contains("dark"));
 }
 
 function loadDarkMode() {
-  const saved = localStorage.getItem("darkMode");
-  if (saved === "true") {
+  if (localStorage.getItem("darkMode") === "true") {
     document.body.classList.add("dark");
   }
 }
