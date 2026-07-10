@@ -2,61 +2,101 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ernest Dashboard</title>
+  <title>Ernest's Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
 
-  <div class="container">
-    <header>
-      <h1>Ernest's Dashboard</h1>
-
-      <div class="header-buttons">
-        <button class="toggle-btn" onclick="toggleDarkMode()">🌙</button>
-        <button onclick="openModal()">+ Add Subject</button>
-      </div>
-    </header>
-
-    <!-- Chart Section -->
-    <div class="chart-section">
-      <div class="chart-header">
-        <h3>Performance Overview</h3>
-        <button onclick="toggleChartType()">Switch Chart</button>
-      </div>
-      <canvas id="gradesChart"></canvas>
-    </div>
-
-    <!-- Average Section -->
-    <div class="average-section">
-      <div class="average-label">Average</div>
-      <div class="average-bar">
-        <div class="average-fill" id="averageFill"></div>
-      </div>
-      <div class="average-value" id="averageValue">0%</div>
-    </div>
-
-    <div id="subjectsContainer"></div>
-  </div>
-
-  <!-- Modal -->
-  <div class="modal" id="modal">
-    <div class="modal-content">
-      <h2 id="modalTitle">Add Subject</h2>
-      <input type="text" id="subjectName" placeholder="Subject name">
-      <input type="number" id="subjectScore" placeholder="Score">
-      <div class="modal-buttons">
-        <button onclick="closeModal()">Cancel</button>
-        <button onclick="saveSubject()">Save</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Chart.js CDN -->
+  <!-- Chart.js MUST load before script.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Script -->
-  <script src="script.js?v=200"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f5f7;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+
+    #chartContainer {
+      position: relative;
+      height: 350px;
+    }
+
+    .subject-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      margin-top: 10px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+    }
+
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #0a84ff;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .average-bar {
+      height: 12px;
+      background: #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    #averageFill {
+      height: 100%;
+      width: 0%;
+      background: #34c759;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Ernest's Dashboard</h1>
+
+  <div class="card">
+    <h2>Performance Overview</h2>
+    <div id="chartContainer">
+      <canvas id="gradesChart"></canvas>
+    </div>
+    <button onclick="toggleChartType()">Switch Chart</button>
+  </div>
+
+  <div class="card">
+    <h3>Average</h3>
+    <div class="average-bar">
+      <div id="averageFill"></div>
+    </div>
+    <p id="averageValue">0%</p>
+  </div>
+
+  <div id="subjectsContainer"></div>
+
+  <!-- Your script -->
+  <script src="script.js"></script>
 
 </body>
 </html>
