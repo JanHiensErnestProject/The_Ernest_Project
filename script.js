@@ -1,7 +1,3 @@
-// ==========================
-// DATA
-// ==========================
-
 let subjects = JSON.parse(localStorage.getItem("subjects")) || [
   { name: "Mathematics", score: 72 },
   { name: "English", score: 65 },
@@ -10,20 +6,11 @@ let subjects = JSON.parse(localStorage.getItem("subjects")) || [
 
 let editIndex = null;
 let chartInstance = null;
-
-
-// ==========================
-// STORAGE
-// ==========================
+let currentChartType = "bar";
 
 function save() {
   localStorage.setItem("subjects", JSON.stringify(subjects));
 }
-
-
-// ==========================
-// AVERAGE
-// ==========================
 
 function calculateAverage() {
   const total = subjects.reduce((sum, s) => sum + s.score, 0);
@@ -36,13 +23,8 @@ function getAverageColor(avg) {
   return "#34c759";
 }
 
-
-// ==========================
-// CHART
-// ==========================
-
 function renderChart() {
-  const ctx = document.getElementById("gradesChart");
+  const ctx = document.getElementById("gradesChart").getContext("2d");
 
   const labels = subjects.map(s => s.name);
   const data = subjects.map(s => s.score);
@@ -52,36 +34,43 @@ function renderChart() {
   }
 
   chartInstance = new Chart(ctx, {
-    type: "bar",
+    type: currentChartType,
     data: {
       labels: labels,
       datasets: [{
-        label: "Score",
         data: data,
-        backgroundColor: "#0a84ff"
+        backgroundColor: [
+          "#0a84ff",
+          "#34c759",
+          "#ff9500",
+          "#af52de",
+          "#ff3b30",
+          "#5ac8fa"
+        ]
       }]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false
+          display: currentChartType === "pie"
         }
       },
-      scales: {
+      scales: currentChartType === "bar" ? {
         y: {
           beginAtZero: true,
           max: 100
         }
-      }
+      } : {}
     }
   });
 }
 
-
-// ==========================
-// RENDER
-// ==========================
+function toggleChartType() {
+  currentChartType = currentChartType === "bar" ? "pie" : "bar";
+  renderChart();
+}
 
 function render() {
   const container = document.getElementById("subjectsContainer");
@@ -123,16 +112,9 @@ function render() {
   renderChart();
 }
 
-
-// ==========================
-// MODAL
-// ==========================
-
 function openModal(index = null) {
   editIndex = index;
-
-  const modal = document.getElementById("modal");
-  modal.style.display = "flex";
+  document.getElementById("modal").style.display = "flex";
 
   if (index !== null) {
     document.getElementById("modalTitle").innerText = "Edit Subject";
@@ -172,11 +154,6 @@ function deleteSubject(index) {
   render();
 }
 
-
-// ==========================
-// DARK MODE
-// ==========================
-
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
   const isDark = document.body.classList.contains("dark");
@@ -189,11 +166,6 @@ function loadDarkMode() {
     document.body.classList.add("dark");
   }
 }
-
-
-// ==========================
-// INIT
-// ==========================
 
 loadDarkMode();
 render();
