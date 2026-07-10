@@ -1,3 +1,8 @@
+
+// ==========================
+// DATA
+// ==========================
+
 let subjects = JSON.parse(localStorage.getItem("subjects")) || [
   { name: "Mathematics", score: 72 },
   { name: "English", score: 65 },
@@ -6,9 +11,19 @@ let subjects = JSON.parse(localStorage.getItem("subjects")) || [
 
 let editIndex = null;
 
+
+// ==========================
+// STORAGE
+// ==========================
+
 function save() {
   localStorage.setItem("subjects", JSON.stringify(subjects));
 }
+
+
+// ==========================
+// AVERAGE
+// ==========================
 
 function calculateAverage() {
   const total = subjects.reduce((sum, s) => sum + s.score, 0);
@@ -20,6 +35,11 @@ function getAverageColor(avg) {
   if (avg < 75) return "#ff9500";
   return "#34c759";
 }
+
+
+// ==========================
+// RENDER
+// ==========================
 
 function render() {
   const container = document.getElementById("subjectsContainer");
@@ -58,6 +78,11 @@ function render() {
 
   document.getElementById("averageValue").innerText = avg + "%";
 }
+
+
+// ==========================
+// MODAL
+// ==========================
 
 function openModal(index = null) {
   editIndex = index;
@@ -100,7 +125,13 @@ function saveSubject() {
 function deleteSubject(index) {
   subjects.splice(index, 1);
   save();
-  render();// 🌙 Dark Mode
+  render();
+}
+
+
+// ==========================
+// DARK MODE
+// ==========================
 
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
@@ -111,32 +142,15 @@ function toggleDarkMode() {
 
 function loadDarkMode() {
   const saved = localStorage.getItem("darkMode");
-
   if (saved === "true") {
     document.body.classList.add("dark");
   }
 }
 
-// Load saved theme
+
+// ==========================
+// INIT
+// ==========================
+
 loadDarkMode();
-}
-
-render();// 🌙 Dark Mode
-
-function toggleDarkMode() {
-  document.body.classList.toggle("dark");
-
-  const isDark = document.body.classList.contains("dark");
-  localStorage.setItem("darkMode", isDark);
-}
-
-function loadDarkMode() {
-  const saved = localStorage.getItem("darkMode");
-
-  if (saved === "true") {
-    document.body.classList.add("dark");
-  }
-}
-
-// Load saved theme
-loadDarkMode();
+render();
