@@ -57,34 +57,6 @@ const centerTextPlugin = {
 
 Chart.register(centerTextPlugin);
 
-/* ✅ STRONG GRADIENT CREATOR */
-function createStrongGradients(ctx, chartArea) {
-  const baseColors = [
-    ["#0a84ff", "#64d2ff"],
-    ["#34c759", "#30d158"],
-    ["#ff9500", "#ffd60a"],
-    ["#af52de", "#bf5af2"],
-    ["#ff3b30", "#ff453a"],
-    ["#5ac8fa", "#70e1ff"]
-  ];
-
-  return baseColors.map(pair => {
-    const gradient = ctx.createRadialGradient(
-      chartArea.width / 2,
-      chartArea.height / 2,
-      20,
-      chartArea.width / 2,
-      chartArea.height / 2,
-      chartArea.width / 2
-    );
-
-    gradient.addColorStop(0, pair[1]);  // bright inner
-    gradient.addColorStop(1, pair[0]);  // darker outer
-
-    return gradient;
-  });
-}
-
 function renderChart() {
   const canvas = document.getElementById("gradesChart");
   const ctx = canvas.getContext("2d");
@@ -98,12 +70,32 @@ function renderChart() {
 
   const chartType = currentChartType === "bar" ? "bar" : "doughnut";
 
+  // ✅ CLEAN GRADIENT COLORS
+  const gradientColors = chartType === "doughnut"
+    ? [
+        createGradient(ctx, "#0a84ff", "#64d2ff"),
+        createGradient(ctx, "#34c759", "#30d158"),
+        createGradient(ctx, "#ff9500", "#ffd60a"),
+        createGradient(ctx, "#af52de", "#bf5af2"),
+        createGradient(ctx, "#ff3b30", "#ff453a"),
+        createGradient(ctx, "#5ac8fa", "#70e1ff")
+      ]
+    : [
+        "#0a84ff",
+        "#34c759",
+        "#ff9500",
+        "#af52de",
+        "#ff3b30",
+        "#5ac8fa"
+      ];
+
   chartInstance = new Chart(ctx, {
     type: chartType,
     data: {
       labels: labels,
       datasets: [{
         data: data,
+        backgroundColor: gradientColors,
         borderWidth: 3,
         borderColor: "#ffffff"
       }]
@@ -124,31 +116,17 @@ function renderChart() {
         }
       } : {},
       animation: {
-        duration: 900,
-        easing: "easeOutQuart"
+        duration: 800
       }
-    },
-    plugins: [{
-      id: "gradientPlugin",
-      beforeDatasetsDraw(chart) {
-        if (chart.config.type !== "doughnut") return;
-
-        const { ctx, chartArea } = chart;
-        if (!chartArea) return;
-
-        const gradients = createStrongGradients(ctx, chartArea);
-        chart.data.datasets[0].backgroundColor = gradients;
-
-        // REAL GLOW
-        ctx.save();
-        ctx.shadowBlur = 30;
-        ctx.shadowColor = "rgba(255,255,255,0.3)";
-      },
-      afterDatasetsDraw(chart) {
-        chart.ctx.restore();
-      }
-    }]
+    }
   });
+}
+
+function createGradient(ctx, color1, color2) {
+  const gradient = ctx.createLinearGradient(0, 0, 300, 300);
+  gradient.addColorStop(0, color1);
+  gradient.addColorStop(1, color2);
+  return gradient;
 }
 
 function toggleChartType() {
