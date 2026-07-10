@@ -193,3 +193,14 @@ button:hover {
   justify-content: flex-end;
   gap: 10px;
 }
+/* =========================
+   CHART
+========================= */
+
+.chart-section {
+  background: var(--card);
+  padding: 25px;
+  border-radius: 16px;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
