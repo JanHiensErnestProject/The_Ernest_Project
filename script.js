@@ -33,8 +33,10 @@ function renderChart() {
     chartInstance.destroy();
   }
 
+  const chartType = currentChartType === "bar" ? "bar" : "doughnut";
+
   chartInstance = new Chart(ctx, {
-    type: currentChartType,
+    type: chartType,
     data: {
       labels: labels,
       datasets: [{
@@ -46,18 +48,21 @@ function renderChart() {
           "#af52de",
           "#ff3b30",
           "#5ac8fa"
-        ]
+        ],
+        borderWidth: 2,
+        borderColor: "#1c1c1e"
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      cutout: chartType === "doughnut" ? "60%" : 0,
       plugins: {
         legend: {
-          display: currentChartType === "pie"
+          display: chartType === "doughnut"
         }
       },
-      scales: currentChartType === "bar" ? {
+      scales: chartType === "bar" ? {
         y: {
           beginAtZero: true,
           max: 100
@@ -68,7 +73,7 @@ function renderChart() {
 }
 
 function toggleChartType() {
-  currentChartType = currentChartType === "bar" ? "pie" : "bar";
+  currentChartType = currentChartType === "bar" ? "doughnut" : "bar";
   renderChart();
 }
 
