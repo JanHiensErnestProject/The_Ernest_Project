@@ -24,7 +24,7 @@ function getAverageColor(avg) {
   return "#34c759";
 }
 
-/* ✅ CENTER TEXT INSIDE DOUGHNUT */
+/* ✅ CENTER TEXT PLUGIN */
 const centerTextPlugin = {
   id: "centerTextPlugin",
   afterDraw(chart) {
@@ -44,9 +44,9 @@ const centerTextPlugin = {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    ctx.font = "bold 32px sans-serif";
+    ctx.font = "bold 34px sans-serif";
     ctx.fillStyle = color;
-    ctx.fillText(avg + "%", x, y - 10);
+    ctx.fillText(avg + "%", x, y - 12);
 
     ctx.font = "14px sans-serif";
     ctx.fillStyle = "#999";
@@ -58,21 +58,28 @@ const centerTextPlugin = {
 
 Chart.register(centerTextPlugin);
 
-/* ✅ SMOOTH FADING GRADIENT */
-function createGradient(ctx, color1, color2) {
-  const gradient = ctx.createRadialGradient(
-    200, 200, 40,
-    200, 200, 260
-  );
+/* ✅ SHADE HELPER FOR DARK/LIGHT FADE */
+function shadeColor(color, percent) {
+  let R = parseInt(color.substring(1,3),16);
+  let G = parseInt(color.substring(3,5),16);
+  let B = parseInt(color.substring(5,7),16);
 
-  gradient.addColorStop(0, color1);
-  gradient.addColorStop(0.5, color1);
-  gradient.addColorStop(0.8, color2);
-  gradient.addColorStop(1, color2);
+  R = parseInt(R * (100 + percent) / 100);
+  G = parseInt(G * (100 + percent) / 100);
+  B = parseInt(B * (100 + percent) / 100);
 
-  return gradient;
+  R = (R<255)?R:255;
+  G = (G<255)?G:255;
+  B = (B<255)?B:255;
+
+  const RR = ((R.toString(16).length==1)?"0":"")+R.toString(16);
+  const GG = ((G.toString(16).length==1)?"0":"")+G.toString(16);
+  const BB = ((B.toString(16).length==1)?"0":"")+B.toString(16);
+
+  return "#"+RR+GG+BB;
 }
 
+/* ✅ RENDER CHART WITH TRUE RADIAL FADING */
 function renderChart() {
   const canvas = document.getElementById("gradesChart");
   const ctx = canvas.getContext("2d");
@@ -87,18 +94,13 @@ function renderChart() {
   const chartType = currentChartType === "bar" ? "bar" : "doughnut";
 
   const baseColors = [
-    ["#0a84ff", "#64d2ff"],
-    ["#34c759", "#30d158"],
-    ["#ff9500", "#ffd60a"],
-    ["#af52de", "#bf5af2"],
-    ["#ff3b30", "#ff453a"],
-    ["#5ac8fa", "#70e1ff"]
+    "#0a84ff",
+    "#34c759",
+    "#ffcc00",
+    "#af52de",
+    "#ff3b30",
+    "#5ac8fa"
   ];
-
-  const backgroundColors =
-    chartType === "doughnut"
-      ? baseColors.map(pair => createGradient(ctx, pair[0], pair[1]))
-      : baseColors.map(pair => pair[0]);
 
   chartInstance = new Chart(ctx, {
     type: chartType,
@@ -106,19 +108,49 @@ function renderChart() {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: backgroundColors,
         borderColor: "#ffffff",
         borderWidth: 3,
-        hoverOffset: 8
+        hoverOffset: 12,
+        backgroundColor: function(context) {
+
+          if (chartType !== "doughnut") {
+            return baseColors;
+          }
+
+          const chart = context.chart;
+          const arc = chart.getDatasetMeta(0).data[context.dataIndex];
+          if (!arc) return baseColors[context.dataIndex];
+
+          const { x, y, innerRadius, outerRadius } = arc;
+          const base = baseColors[context.dataIndex % baseColors.length];
+
+          const gradient = chart.ctx.createRadialGradient(
+            x, y, innerRadius,
+            x, y, outerRadius
+          );
+
+          // Darker inside
+          gradient.addColorStop(0, shadeColor(base, -25));
+
+          // Normal middle
+          gradient.addColorStop(0.5, base);
+
+          // Lighter outside
+          gradient.addColorStop(1, shadeColor(base, 35));
+
+          return gradient;
+        }
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       cutout: chartType === "doughnut" ? "65%" : 0,
+      rotation: -90,
       animation: {
-        duration: 1000,
-        easing: "easeOutQuart"
+        animateRotate: true,
+        duration: 1400,
+        easing: "easeOutExpo"
       },
       plugins: {
         legend: {
@@ -135,11 +167,13 @@ function renderChart() {
   });
 }
 
+/* ✅ TOGGLE CHART TYPE */
 function toggleChartType() {
   currentChartType = currentChartType === "bar" ? "doughnut" : "bar";
   renderChart();
 }
 
+/* ✅ RENDER SUBJECT LIST */
 function render() {
   const container = document.getElementById("subjectsContainer");
   container.innerHTML = "";
@@ -174,6 +208,7 @@ function render() {
   renderChart();
 }
 
+/* ✅ MODAL CONTROLS */
 function openModal(index = null) {
   editIndex = index;
   document.getElementById("modal").style.display = "flex";
@@ -214,6 +249,7 @@ function deleteSubject(index) {
   render();
 }
 
+/* ✅ DARK MODE */
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
   localStorage.setItem("darkMode", document.body.classList.contains("dark"));
