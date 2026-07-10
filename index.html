@@ -4,69 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ernest Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <style>
 body {
   margin: 0;
-  background: #ffffff;
-  font-family: Arial, sans-serif;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  background: white;
+  font-family: Arial, sans-serif;
 }
-
-#chartWrapper {
-  position: relative;
-  width: 500px;
-  height: 500px;
-}
-
-/* Tubular depth */
-#chartWrapper::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  pointer-events: none;
-  background: radial-gradient(
-    circle,
-    rgba(0,0,0,0.45) 0%,
-    rgba(255,255,255,0.55) 45%,
-    rgba(0,0,0,0.45) 90%
-  );
-  mix-blend-mode: overlay;
-}
-
-/* Gloss highlight */
-#chartWrapper::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at 30% 20%,
-    rgba(255,255,255,0.8),
-    transparent 70%
-  );
-}
-
 canvas {
-  position: relative;
-  z-index: 2;
+  width: 500px !important;
+  height: 500px !important;
 }
 </style>
 </head>
-
 <body>
 
-<div id="chartWrapper">
-  <canvas id="gradesChart"></canvas>
-</div>
+<canvas id="gradesChart"></canvas>
 
-<script src="script.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const ctx = document.getElementById("gradesChart");
+
+  new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Math", "English", "Science", "History"],
+      datasets: [{
+        data: [85, 78, 90, 88],
+        backgroundColor: ["#ff6384", "#36a2eb", "#ffce56", "#4bc0c0"]
+      }]
+    },
+    options: {
+      cutout: "60%"
+    }
+  });
+
+});
+</script>
 
 </body>
 </html>
