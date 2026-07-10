@@ -4,6 +4,8 @@ let subjects = JSON.parse(localStorage.getItem("subjects")) || [
   { name: "Science", score: 88 }
 ];
 
+let editIndex = null;
+
 function save() {
   localStorage.setItem("subjects", JSON.stringify(subjects));
 }
@@ -31,7 +33,7 @@ function render() {
         <p>${subject.score}%</p>
       </div>
       <div>
-        <button onclick="editSubject(${index})">Edit</button>
+        <button onclick="openModal(${index})">Edit</button>
         <button onclick="deleteSubject(${index})">Delete</button>
       </div>
     `;
@@ -44,24 +46,42 @@ function render() {
   document.getElementById("averageFill").style.width = avg + "%";
 }
 
-function addSubject() {
-  const name = prompt("Subject name:");
-  const score = parseInt(prompt("Score:"));
+function openModal(index = null) {
+  editIndex = index;
+
+  const modal = document.getElementById("modal");
+  modal.style.display = "flex";
+
+  if (index !== null) {
+    document.getElementById("modalTitle").innerText = "Edit Subject";
+    document.getElementById("subjectName").value = subjects[index].name;
+    document.getElementById("subjectScore").value = subjects[index].score;
+  } else {
+    document.getElementById("modalTitle").innerText = "Add Subject";
+    document.getElementById("subjectName").value = "";
+    document.getElementById("subjectScore").value = "";
+  }
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+}
+
+function saveSubject() {
+  const name = document.getElementById("subjectName").value;
+  const score = parseInt(document.getElementById("subjectScore").value);
 
   if (!name || isNaN(score)) return;
 
-  subjects.push({ name, score });
+  if (editIndex !== null) {
+    subjects[editIndex] = { name, score };
+  } else {
+    subjects.push({ name, score });
+  }
+
   save();
   render();
-}
-
-function editSubject(index) {
-  const newScore = parseInt(prompt("New score:", subjects[index].score));
-  if (isNaN(newScore)) return;
-
-  subjects[index].score = newScore;
-  save();
-  render();
+  closeModal();
 }
 
 function deleteSubject(index) {
