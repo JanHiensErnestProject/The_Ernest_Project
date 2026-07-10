@@ -20,9 +20,14 @@
 
     <!-- Chart Section -->
     <div class="chart-section">
+      <div class="chart-header">
+        <h3>Performance Overview</h3>
+        <button onclick="toggleChartType()">Switch Chart</button>
+      </div>
       <canvas id="gradesChart"></canvas>
     </div>
 
+    <!-- Average Section -->
     <div class="average-section">
       <div class="average-label">Average</div>
       <div class="average-bar">
@@ -31,6 +36,7 @@
       <div class="average-value" id="averageValue">0%</div>
     </div>
 
+    <!-- Subjects -->
     <div id="subjectsContainer"></div>
   </div>
 
@@ -38,10 +44,8 @@
   <div class="modal" id="modal">
     <div class="modal-content">
       <h2 id="modalTitle">Add Subject</h2>
-
       <input type="text" id="subjectName" placeholder="Subject name">
       <input type="number" id="subjectScore" placeholder="Score">
-
       <div class="modal-buttons">
         <button onclick="closeModal()">Cancel</button>
         <button onclick="saveSubject()">Save</button>
@@ -52,8 +56,8 @@
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Versioned Script -->
-  <script src="script.js?v=20"></script>
+  <!-- Script -->
+  <script src="script.js?v=100"></script>
 
 </body>
 </html>
