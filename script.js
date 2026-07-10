@@ -9,6 +9,7 @@ let subjects = JSON.parse(localStorage.getItem("subjects")) || [
 ];
 
 let editIndex = null;
+let chartInstance = null;
 
 
 // ==========================
@@ -33,6 +34,48 @@ function getAverageColor(avg) {
   if (avg < 60) return "#ff3b30";
   if (avg < 75) return "#ff9500";
   return "#34c759";
+}
+
+
+// ==========================
+// CHART
+// ==========================
+
+function renderChart() {
+  const ctx = document.getElementById("gradesChart");
+
+  const labels = subjects.map(s => s.name);
+  const data = subjects.map(s => s.score);
+
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Score",
+        data: data,
+        backgroundColor: "#0a84ff"
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100
+        }
+      }
+    }
+  });
 }
 
 
@@ -76,6 +119,8 @@ function render() {
   fill.style.background = avgColor;
 
   document.getElementById("averageValue").innerText = avg + "%";
+
+  renderChart();
 }
 
 
